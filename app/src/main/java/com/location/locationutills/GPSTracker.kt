@@ -14,6 +14,10 @@ import android.location.LocationListener
 import android.provider.Settings
 import android.util.Log
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationCallback
+import android.content.ContentValues.TAG
+import com.google.android.gms.location.LocationResult
 
 
 @SuppressLint("Registered")
@@ -25,21 +29,31 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
     // flag for GPS status
     internal var isGPSEnabled = false
 
+    private var locationCallback: LocationCallback? = null
+
+    val UPDATE_INTERVAL = 1000 * 3
+    val FASTEST_INTERVAL = 1000 * 3
+
+    private var locationRequest: LocationRequest? = LocationRequest()
+
     // flag for network status
     internal var isNetworkEnabled = false
 
     // flag for GPS status
     internal var canGetLocation = false
-
     internal var location: Location? = null // location
     internal var latitude: Double = 0.toDouble() // latitude
     internal var longitude: Double = 0.toDouble() // longitude
 
+
     // Declaring a Location Manager
     protected var locationManager: LocationManager? = null
 
+    lateinit var listener: CustomLocationListener
+
     init {
         getLocation()
+//        getLocationListener()
     }
 
     @SuppressLint("MissingPermission")
@@ -49,31 +63,43 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
                     .getSystemService(LOCATION_SERVICE) as LocationManager
 
             // getting GPS status
-            isGPSEnabled = locationManager!!
-                    .isProviderEnabled(LocationManager.GPS_PROVIDER)
+            isGPSEnabled = locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
             // getting network status
-            isNetworkEnabled = locationManager!!
-                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            isNetworkEnabled = locationManager!!.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
             if (!isGPSEnabled && !isNetworkEnabled) {
                 // no network provider is enabled
             } else {
                 this.canGetLocation = true
                 if (isNetworkEnabled) {
-                    locationManager!!.requestLocationUpdates(
-                            LocationManager.NETWORK_PROVIDER,
-                            MIN_TIME_BW_UPDATES,
-                            MIN_DISTANCE_CHANGE_FOR_UPDATES, this)
+
                     Log.d("Network", "Network")
                     if (locationManager != null) {
                         location = locationManager!!
                                 .getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+                        locationManager!!.requestLocationUpdates(
+                                LocationManager.NETWORK_PROVIDER,
+                                MIN_TIME_BW_UPDATES,
+                                MIN_DISTANCE_CHANGE_FOR_UPDATES, this)
+
                         if (location != null) {
                             val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
                             @android.annotation.SuppressLint("MissingPermission") val lastLocation = mFusedLocationClient.lastLocation
                             lastLocation.addOnSuccessListener(this as java.util.concurrent.Executor, com.google.android.gms.tasks.OnSuccessListener { location ->
                                 if (location != null) {
+
+
+//                                    this.locationCallback = object : LocationCallback() {
+//                                        override fun onLocationResult(locationResult: LocationResult?) {
+//                                            super.onLocationResult(locationResult) // why? this. is. retarded. Android.
+//                                            val currentLocation = locationResult!!.lastLocation
+//                                                Log.d(TAG, "onLocationResult:Current Location" + currentLocation)
+//
+//                                        }
+//                                    }
+
                                     latitude = location.latitude
                                     longitude = location.longitude
                                 }
@@ -83,13 +109,105 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
                 }
                 // if GPS Enabled get lat/long using GPS Services
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
         return location
     }
+
+    @SuppressLint("MissingPermission")
+    fun startLocationUpdate(listener: CustomLocationListener) {
+        if (location != null) {
+            val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
+
+            locationRequest?.interval = UPDATE_INTERVAL.toLong()
+            locationRequest?.fastestInterval = FASTEST_INTERVAL.toLong()
+            locationRequest?.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+
+            locationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    for (location in locationResult!!.locations) {
+                        Log.d(TAG, "onLocationResult: .................." + location.longitude + "....." + location.latitude + "........" + location.time)
+                        listener.onLocationChage(location)
+                    }
+
+                }
+            }
+            mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+
+//            lastLocation.addOnSuccessListener(this as java.util.concurrent.Executor, com.google.android.gms.tasks.OnSuccessListener { location ->
+//                if (location != null) {
+//
+//                    locationRequest?.interval = UPDATE_INTERVAL.toLong()
+//                    locationRequest?.fastestInterval = FASTEST_INTERVAL.toLong()
+//                    locationRequest?.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+//
+//                    latitude = location.latitude
+//                    longitude = location.longitude
+//                    listener.onLocationChage(location)
+//
+//                }
+//            })
+
+        }
+    }
+
+//    @SuppressLint("MissingPermission")
+//    fun getLocationListener(): Location? {
+//        try {
+//            locationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
+//
+//            // getting GPS status
+//            isGPSEnabled = locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER)
+//
+//            // getting network status
+//            isNetworkEnabled = locationManager!!.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+//
+//            if (!isGPSEnabled && !isNetworkEnabled) {
+//                // no network provider is enabled
+//            } else {
+//                this.canGetLocation = true
+//                if (isNetworkEnabled) {
+//
+//                    Log.d("Network", "Network")
+//                    if (locationManager != null) {
+//                        location = locationManager!!
+//                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+//
+//                        locationManager!!.requestLocationUpdates(
+//                                LocationManager.NETWORK_PROVIDER,
+//                                MIN_TIME_BW_UPDATES,
+//                                MIN_DISTANCE_CHANGE_FOR_UPDATES, this)
+//
+//                        if (location != null) {
+//                            val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
+//                            @android.annotation.SuppressLint("MissingPermission") val lastLocation = mFusedLocationClient.lastLocation
+//                            lastLocation.addOnSuccessListener(this as java.util.concurrent.Executor, com.google.android.gms.tasks.OnSuccessListener { location ->
+//                                if (location != null) {
+//
+//                                    locationRequest?.interval = UPDATE_INTERVAL.toLong()
+//                                    locationRequest?.fastestInterval = FASTEST_INTERVAL.toLong()
+//                                    locationRequest?.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+//
+//                                    latitude = location.latitude
+//                                    longitude = location.longitude
+//                                    listener.onLocationChage(location)
+//
+//                                }
+//                            })
+//                        }
+//                    }
+//                }
+//                // if GPS Enabled get lat/long using GPS Services
+//            }
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
+//
+//        return location
+//    }
 
     /**
      * Stop using GPS listener
@@ -104,6 +222,7 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
     /**
      * Function to get latitude
      */
+
     fun getLatitude(): Double {
         if (location != null) {
             latitude = location!!.latitude
@@ -134,10 +253,22 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
     }
 
     /**
+     * Function to check GPS/wifi enabled
+     * @return boolean
+     */
+    fun getLocationListener(listener: CustomLocationListener): Boolean {
+        listener.onLocationChage(location!!)
+        return this.canGetLocation
+    }
+
+
+    /**
      * Function to show settings alert dialog
      * On pressing Settings button will lauch Settings Options
      */
+
     fun showSettingsAlert() {
+
         val alertDialog = AlertDialog.Builder(mContext)
 
         // Setting Dialog Title
@@ -159,7 +290,11 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
         alertDialog.show()
     }
 
-    override fun onLocationChanged(location: Location) {}
+    override fun onLocationChanged(location: Location) {
+        val data = listener.onLocationChage(location)
+        Log.d(TAG, "onLocationChanged: Time interval" + data)
+
+    }
 
     override fun onProviderDisabled(provider: String) {}
 
@@ -182,4 +317,4 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
 
 }
 
-private fun Any.requestLocationUpdates(networK_PROVIDER: String, miN_TIME_BW_UPDATES: Long, miN_DISTANCE_CHANGE_FOR_UPDATES: Long, gpsTracker: GPSTracker) {}
+private fun LocationManager.requestLocationUpdates(networK_PROVIDER: String, miN_TIME_BW_UPDATES: Long, miN_DISTANCE_CHANGE_FOR_UPDATES: Long, gpsTracker: GPSTracker) {}
