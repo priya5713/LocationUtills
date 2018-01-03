@@ -19,7 +19,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     // GPSTracker class
-    internal lateinit var gps: GPSTracker
+    private lateinit var gps: GPSTracker
     lateinit var mBinding: ActivityMainBinding
 
     @SuppressLint("SetTextI18n")
@@ -31,8 +31,6 @@ class MainActivity : AppCompatActivity() {
         checkPermissions(arrayListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         // show location button click event
         mBinding.btn.setOnClickListener {
-
-            gps = GPSTracker(this@MainActivity)
             // check if GPS enabled
             if (gps.canGetLocation()) {
                 val latitude = gps.getLatitude()
@@ -46,21 +44,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         mBinding.btnStop.setOnClickListener {
-            gps = GPSTracker(this@MainActivity)
             gps.stopUsingGPS()
             Log.d(TAG, "onCreate: Stop GPS")
         }
 
         mBinding.btnLastLocation.setOnClickListener {
-            gps = GPSTracker(this@MainActivity)
             gps.startLocationUpdate(object : CustomLocationListener {
-                override fun onLocationChage(mLocation: Location) {
-                    Log.d(TAG, "onLocationChage: ********" + mLocation)
+                @SuppressLint("SimpleDateFormat")
+                override fun onLocationChage(mLocation: Location?) {
                     mBinding.tvResultListener1.text = mLocation.toString()
-                    val date = SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS").format(Date(mLocation.getTime()));
+                    val date = SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS").format(Date(mLocation!!.getTime()));
                     mBinding.tvResultListener2.text = date
                     Toast.makeText(this@MainActivity, "Location Listener Working..!!", Toast.LENGTH_SHORT).show()
-
                 }
             })
         }
@@ -93,7 +88,6 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         for (i in 0 until permissions.size) {
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                gps = GPSTracker(this@MainActivity)
                 gps.showSettingsAlert()
 
 
