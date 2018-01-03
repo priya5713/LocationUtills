@@ -13,6 +13,8 @@ import android.location.Location
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,21 +55,14 @@ class MainActivity : AppCompatActivity() {
             gps = GPSTracker(this@MainActivity)
             gps.startLocationUpdate(object : CustomLocationListener {
                 override fun onLocationChage(mLocation: Location) {
-
                     Log.d(TAG, "onLocationChage: ********" + mLocation)
+                    mBinding.tvResultListener1.text = mLocation.toString()
+                    val date = SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS").format(Date(mLocation.getTime()));
+                    mBinding.tvResultListener2.text = date
+                    Toast.makeText(this@MainActivity, "Location Listener Working..!!", Toast.LENGTH_SHORT).show()
 
                 }
             })
-//            gps.getLocationListener(object : CustomLocationListener {
-//                override fun onLocationChage(mLocation: Location) {
-//                    mBinding.tvResultListener1.text = mLocation.latitude.toString()
-//                    mBinding.tvResultListener2.text = mLocation.longitude.toString()
-//                    mBinding.tvResultListener3.text = mLocation.time.toString()
-//
-//                    Toast.makeText(this@MainActivity, "location" + mLocation, Toast.LENGTH_SHORT).show()
-//                    Log.d(TAG,"onLocationChanged" + " " + mLocation.toString());
-//                }
-//            })
         }
     }
 

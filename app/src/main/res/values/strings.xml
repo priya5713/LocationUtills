@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">LocationUtills</string>
     <string name="location">Location</string>
-    <string name="stop">stop</string>
+    <string name="stop">Stop Location Updates</string>
     <string name="location_change">Location Change</string>
     <string name="error_permission_map">Check your location permission</string>
 </resources>
