@@ -19,8 +19,8 @@ import android.content.Context.LOCATION_SERVICE
 import com.google.android.gms.location.LocationResult
 
 @SuppressLint("Registered")
+class GPSTracker internal constructor(val mContext: Context) : LocationListener {
 
-open class GPSTracker(private val mContext: Context) : LocationListener {
     val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
 
     // flag for GPS status
@@ -80,6 +80,7 @@ open class GPSTracker(private val mContext: Context) : LocationListener {
                                 MIN_DISTANCE_CHANGE_FOR_UPDATES, this)
 
                         if (location != null) {
+
                             val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
                             @android.annotation.SuppressLint("MissingPermission") val lastLocation = mFusedLocationClient.lastLocation
                             lastLocation.addOnSuccessListener { location ->
