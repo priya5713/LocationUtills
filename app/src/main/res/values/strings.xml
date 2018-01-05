@@ -4,4 +4,9 @@
     <string name="stop">Stop Location Updates</string>
     <string name="location_change">Location Change</string>
     <string name="error_permission_map">Check your location permission</string>
+    <string name="next">Next</string>
+    <string name="start">Start</string>
+    <string name="cont">Continue</string>
+    <string name="space">---------------------------------</string>
+    <string name="map">Map</string>
 </resources>

@@ -10,6 +10,13 @@
         tools:context="com.location.locationutills.MainActivity">
 
         <Button
+            android:id="@+id/btn_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="@string/next" />
+
+        <Button
             android:id="@+id/btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -29,6 +36,13 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:text="@string/location_change" />
+
+        <Button
+            android:id="@+id/btn_map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="@string/map" />
 
         <TextView
             android:id="@+id/tv_result"
@@ -55,5 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp" />
+
+
     </LinearLayout>
 </layout>

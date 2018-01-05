@@ -11,17 +11,21 @@ import android.location.LocationManager
 import android.location.LocationListener
 import android.provider.Settings
 import android.util.Log
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationCallback
 import android.content.ContentValues.TAG
 import android.content.Context.LOCATION_SERVICE
-import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.*
 
-@SuppressLint("Registered")
-class GPSTracker internal constructor(val mContext: Context) : LocationListener {
+@SuppressLint("Registered", "StaticFieldLeak")
+object GPSTracker : LocationListener {
 
-    val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
+    private var mContext: Context? = null
+    private lateinit var mFusedLocationClient: FusedLocationProviderClient
+
+    // The minimum distance to change Updates in meters
+    private val MIN_DISTANCE_CHANGE_FOR_UPDATES: Long = 10 // 10 meters
+
+    // The minimum time between updates in milliseconds
+    private val MIN_TIME_BW_UPDATES = (1000 * 60 * 1).toLong() // 1 minute
 
     // flag for GPS status
     private var isGPSEnabled = false
@@ -32,36 +36,38 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
 
     // flag for network status
     internal var isNetworkEnabled = false
-
     // flag for GPS status
     private var canGetLocation = false
     private var location: Location? = null // location
     private var latitude: Double = 0.toDouble() // latitude
     private var longitude: Double = 0.toDouble() // longitude
 
-
     // Declaring a Location Manager
-    private var locationManager: LocationManager? = null
+    lateinit var locationManager: LocationManager
     private lateinit var listener: CustomLocationListener
+    fun initTracker(context: Context) {
+        this.mContext = context
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext!!)
+    }
 
     init {
         getLocation()
     }
 
+
     /**
      * It Returns lat long using FusedLocationClient
      * */
-    @SuppressLint("MissingPermisn", "MissingPermission")
+    @SuppressLint("MissingPermission")
     private fun getLocation(): Location? {
         try {
-            locationManager = mContext
-                    .getSystemService(LOCATION_SERVICE) as LocationManager
+            locationManager = mContext?.getSystemService(LOCATION_SERVICE) as LocationManager
 
             // getting GPS status
-            isGPSEnabled = locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
             // getting network status
-            isNetworkEnabled = locationManager!!.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
             if (!isGPSEnabled && !isNetworkEnabled) {
                 // no network provider is enabled
@@ -70,8 +76,8 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
                 if (isNetworkEnabled) {
 
                     Log.d("Network", "Network")
-                    if (locationManager != null) {
-                        location = locationManager!!
+                    if (true) {
+                        location = locationManager
                                 .getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
                         requestLocationUpdates(
@@ -81,7 +87,7 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
 
                         if (location != null) {
 
-                            val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
+                            val mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext!!)
                             @android.annotation.SuppressLint("MissingPermission") val lastLocation = mFusedLocationClient.lastLocation
                             lastLocation.addOnSuccessListener { location ->
                                 if (location != null) {
@@ -101,7 +107,8 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
     }
 
     /**
-     *
+     *It provides continuous updates of location using location listener
+     * @return location
      * */
 
     @SuppressLint("MissingPermission")
@@ -115,10 +122,9 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
             locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult?) {
                     for (location in locationResult!!.locations) {
-                        Log.d(TAG, "onLocationResult: .................." + location.longitude + "....." + location.latitude + "........" + location.time)
+//                        Log.d(TAG, "onLocationResult: .................." + location.longitude + "....." + location.latitude + "........" + location.time)
                         listener.onLocationChage(location)
                     }
-
                 }
             }
 
@@ -131,7 +137,6 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
      * Calling this function will stop using GPS in your app
      */
     fun stopUsingGPS() {
-
 
         if (locationManager != null) {
             Log.d(TAG, "stopUsingGPS: Listener" + locationCallback)
@@ -191,7 +196,8 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
         // On pressing Settings button
         alertDialog.setPositiveButton("Settings", DialogInterface.OnClickListener { dialog, which ->
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            mContext.startActivity(intent)
+            this.canGetLocation=true
+            mContext?.startActivity(intent)
         })
 
         // on pressing cancel button
@@ -213,15 +219,6 @@ class GPSTracker internal constructor(val mContext: Context) : LocationListener 
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
 
-
-    companion object {
-
-        // The minimum distance to change Updates in meters
-        private val MIN_DISTANCE_CHANGE_FOR_UPDATES: Long = 10 // 10 meters
-
-        // The minimum time between updates in milliseconds
-        private val MIN_TIME_BW_UPDATES = (1000 * 60 * 1).toLong() // 1 minute
-    }
 
 }
 

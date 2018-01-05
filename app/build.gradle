@@ -22,9 +22,9 @@ android {
 
 
 }
-ext{
+ext {
     gradle_version = '3.0.1'
-    playServicesVersion = '11.4.2'
+    playServicesVersion = '11.8.0'
 
 
 }
@@ -42,7 +42,8 @@ dependencies {
     //noinspection GradleDependency
     compile "com.google.android.gms:play-services-maps:${playServicesVersion}"
     compile "com.google.android.gms:play-services-location:${playServicesVersion}"
-
+    //noinspection GradleDynamicVersion
+    compile 'com.google.maps.android:android-maps-utils:0.5+';
 
 }
 repositories {
@@ -51,3 +52,5 @@ repositories {
 kapt {
     generateStubs = true
 }
+
+apply plugin: 'kotlin-android-extensions'
