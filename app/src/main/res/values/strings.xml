@@ -6,7 +6,7 @@
     <string name="error_permission_map">Check your location permission</string>
     <string name="next">Next</string>
     <string name="start">Start</string>
-    <string name="cont">Continue</string>
+    <string name="cont">Continue Location Update</string>
     <string name="space">---------------------------------</string>
     <string name="map">Map</string>
 </resources>

@@ -14,12 +14,12 @@ import android.location.Location
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
-import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var mBinding: ActivityMainBinding
+    lateinit var listener: CustomLocationListener
 
     @SuppressLint("SetTextI18n")
     public override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         GPSTracker.initTracker(this@MainActivity)
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-//        checkPermissions(arrayListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        checkPermissions(arrayListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         // show location button click event
         mBinding.btn.setOnClickListener {
 
@@ -44,25 +44,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         mBinding.btnStop.setOnClickListener {
-            GPSTracker.stopUsingGPS()
+            GPSTracker.stopUsingGPS(listener)
             Log.d(TAG, "onCreate: Stop GPS")
         }
 
         mBinding.btnLastLocation.setOnClickListener {
-            GPSTracker.startLocationUpdate(object : CustomLocationListener {
+            listener = object : CustomLocationListener {
                 override fun onLocationChage(mLocation: Location?) {
                     Log.d(TAG, "onLocationChage: .............$mLocation")
-
                 }
-
-            })
+            }
+            GPSTracker.startLocationUpdate(listener)
+        }
+        mBinding.btnNext.setOnClickListener {
+            val intent = Intent(this@MainActivity, Main2Activity::class.java)
+            startActivity(intent)
 
         }
     }
 
-    fun checkPermissions(perms: ArrayList<String>) {
-        //        val perms = arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.READ_EXTERNAL_STORAGE,
-        //                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.CAMERA)
+    private fun checkPermissions(perms: ArrayList<String>) {
 
         val deniedPerms = arrayListOf<String>()
         val reqPerms = arrayListOf<String>()
@@ -88,8 +89,6 @@ class MainActivity : AppCompatActivity() {
         for (i in 0 until permissions.size) {
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                 GPSTracker.showSettingsAlert()
-
-
             }
         }
     }

@@ -18,7 +18,7 @@ import com.google.android.gms.location.*
 @SuppressLint("Registered", "StaticFieldLeak")
 object GPSTracker : LocationListener {
 
-    private var mContext: Context? = null
+    private lateinit var mContext: Context
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
     // The minimum distance to change Updates in meters
@@ -29,10 +29,13 @@ object GPSTracker : LocationListener {
 
     // flag for GPS status
     private var isGPSEnabled = false
-    private var locationCallback: LocationCallback? = null
+    private lateinit var listener: CustomLocationListener
+    //    private var locationCallback: LocationCallback? = null
     private val UPDATE_INTERVAL = 1000 * 5
     private val FASTEST_INTERVAL = 1000 * 5
     private var locationRequest: LocationRequest? = LocationRequest()
+    private var mStoredCallbackList: ArrayList<LocationCallback> = arrayListOf()
+    private var mCusromStoredCallbackList: ArrayList<CustomLocationListener> = arrayListOf()
 
     // flag for network status
     internal var isNetworkEnabled = false
@@ -44,16 +47,14 @@ object GPSTracker : LocationListener {
 
     // Declaring a Location Manager
     lateinit var locationManager: LocationManager
-    private lateinit var listener: CustomLocationListener
+
+    //    private lateinit var listener: CustomLocationListener
     fun initTracker(context: Context) {
         this.mContext = context
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext!!)
-    }
-
-    init {
+        Log.d(TAG, "initTracker: init tracker....")
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext)
         getLocation()
     }
-
 
     /**
      * It Returns lat long using FusedLocationClient
@@ -61,7 +62,7 @@ object GPSTracker : LocationListener {
     @SuppressLint("MissingPermission")
     private fun getLocation(): Location? {
         try {
-            locationManager = mContext?.getSystemService(LOCATION_SERVICE) as LocationManager
+            locationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
 
             // getting GPS status
             isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -113,21 +114,25 @@ object GPSTracker : LocationListener {
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdate(listener: CustomLocationListener) {
+
         if (location != null) {
 
             locationRequest?.interval = UPDATE_INTERVAL.toLong()
             locationRequest?.fastestInterval = FASTEST_INTERVAL.toLong()
             locationRequest?.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-            locationCallback = object : LocationCallback() {
+            val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult?) {
+                    Log.d(TAG, "onLocationResult: .................." + location!!.longitude + "....." + location!!.latitude + "........" + location!!.time)
                     for (location in locationResult!!.locations) {
-//                        Log.d(TAG, "onLocationResult: .................." + location.longitude + "....." + location.latitude + "........" + location.time)
                         listener.onLocationChage(location)
                     }
                 }
             }
 
+            mStoredCallbackList.add(locationCallback)
+            mCusromStoredCallbackList.add(listener)
+            Log.d(TAG, "onLocationResult: Temp$mStoredCallbackList..........$mCusromStoredCallbackList")
             mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
         }
     }
@@ -136,12 +141,16 @@ object GPSTracker : LocationListener {
      * Stop using GPS listener
      * Calling this function will stop using GPS in your app
      */
-    fun stopUsingGPS() {
+    fun stopUsingGPS(removeListener: CustomLocationListener) {
+
+        locationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
+//        here we created two arraylist ,1st one is for custom location listener callback and 2nd one is for manual callback
+//        listener ,bcz we get listener from custom location and we have to remove from manual listener so both
+//        stored in a array and find the index of each ,using index we can remove listener...
+        val mListenerIndex = mCusromStoredCallbackList.indexOf(removeListener)
 
         if (locationManager != null) {
-            Log.d(TAG, "stopUsingGPS: Listener" + locationCallback)
-
-            mFusedLocationClient.removeLocationUpdates(locationCallback)
+            mFusedLocationClient.removeLocationUpdates(mStoredCallbackList[mListenerIndex])
         }
     }
 
@@ -196,8 +205,8 @@ object GPSTracker : LocationListener {
         // On pressing Settings button
         alertDialog.setPositiveButton("Settings", DialogInterface.OnClickListener { dialog, which ->
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            this.canGetLocation=true
-            mContext?.startActivity(intent)
+            this.canGetLocation = true
+            mContext.startActivity(intent)
         })
 
         // on pressing cancel button
