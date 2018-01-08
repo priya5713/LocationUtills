@@ -16,7 +16,7 @@ import android.content.Context.LOCATION_SERVICE
 import com.google.android.gms.location.*
 
 @SuppressLint("Registered", "StaticFieldLeak")
-object GPSTracker : LocationListener {
+object LocationTracker : LocationListener {
 
     private lateinit var mContext: Context
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
@@ -48,7 +48,6 @@ object GPSTracker : LocationListener {
     // Declaring a Location Manager
     lateinit var locationManager: LocationManager
 
-    //    private lateinit var listener: CustomLocationListener
     fun initTracker(context: Context) {
         this.mContext = context
         Log.d(TAG, "initTracker: init tracker....")
@@ -58,7 +57,7 @@ object GPSTracker : LocationListener {
 
     /**
      * It Returns lat long using FusedLocationClient
-     * */
+     **/
     @SuppressLint("MissingPermission")
     private fun getLocation(): Location? {
         try {
@@ -113,7 +112,7 @@ object GPSTracker : LocationListener {
      * */
 
     @SuppressLint("MissingPermission")
-    fun startLocationUpdate(listener: CustomLocationListener) {
+    fun addListener(listener: CustomLocationListener) {
 
         if (location != null) {
 
@@ -141,17 +140,37 @@ object GPSTracker : LocationListener {
      * Stop using GPS listener
      * Calling this function will stop using GPS in your app
      */
-    fun stopUsingGPS(removeListener: CustomLocationListener) {
+    fun removeListener(removeAllListener: CustomLocationListener) {
 
         locationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
-//        here we created two arraylist ,1st one is for custom location listener callback and 2nd one is for manual callback
-//        listener ,bcz we get listener from custom location and we have to remove from manual listener so both
-//        stored in a array and find the index of each ,using index we can remove listener...
-        val mListenerIndex = mCusromStoredCallbackList.indexOf(removeListener)
+        try {
+            /* here we created two arraylist ,1st one is for custom location listener callback and 2nd one is for manual callback
+      listener ,bcz we get listener from custom location and we have to remove from manual listener so both
+      stored in a array and find the index of each ,using index we can remove listener...*/
+            val mListenerIndex = mCusromStoredCallbackList.indexOf(removeAllListener)
 
-        if (locationManager != null) {
-            mFusedLocationClient.removeLocationUpdates(mStoredCallbackList[mListenerIndex])
+            if (locationManager != null) {
+                mFusedLocationClient.removeLocationUpdates(mStoredCallbackList[mListenerIndex])
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "removeListener: Error" + e)
         }
+    }
+
+    /**
+     * Stop All GPS listener*/
+    fun removeAllListener() {
+        locationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
+        try {
+            for (i in mStoredCallbackList) {
+                mFusedLocationClient.removeLocationUpdates(i)
+            }
+            mStoredCallbackList.clear()
+            mCusromStoredCallbackList.clear()
+        } catch (e: Exception) {
+            println("Exception" + e)
+        }
+
     }
 
     /**
@@ -180,10 +199,10 @@ object GPSTracker : LocationListener {
     }
 
     /**
-     * Function to check GPS/wifi enabled
+     * Function to check GPS/wifi enabled for getLocation
      * @return boolean
      */
-    fun canGetLocation(): Boolean {
+    fun getLastKnownLocation(): Boolean {
         return this.canGetLocation
     }
 
@@ -219,7 +238,6 @@ object GPSTracker : LocationListener {
     override fun onLocationChanged(location: Location) {
         val data = listener.onLocationChage(location)
         Log.d(TAG, "onLocationChanged: Time interval" + data)
-
     }
 
     override fun onProviderDisabled(provider: String) {}
@@ -228,7 +246,6 @@ object GPSTracker : LocationListener {
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
 
-
 }
 
-private fun requestLocationUpdates(networK_PROVIDER: String, miN_TIME_BW_UPDATES: Long, miN_DISTANCE_CHANGE_FOR_UPDATES: Long, gpsTracker: GPSTracker) {}
+private fun requestLocationUpdates(networK_PROVIDER: String, miN_TIME_BW_UPDATES: Long, miN_DISTANCE_CHANGE_FOR_UPDATES: Long, gpsTracker: LocationTracker) {}

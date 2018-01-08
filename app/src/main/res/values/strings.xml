@@ -9,4 +9,5 @@
     <string name="cont">Continue Location Update</string>
     <string name="space">---------------------------------</string>
     <string name="map">Map</string>
+    <string name="remove_all_location_updates">Remove all location updates</string>
 </resources>

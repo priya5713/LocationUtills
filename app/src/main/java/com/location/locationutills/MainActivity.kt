@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        GPSTracker.initTracker(this@MainActivity)
+        LocationTracker.initTracker(this@MainActivity)
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         checkPermissions(arrayListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -32,21 +32,23 @@ class MainActivity : AppCompatActivity() {
         mBinding.btn.setOnClickListener {
 
             // check if GPS enabled
-            if (GPSTracker.canGetLocation()) {
-                val latitude = GPSTracker.getLatitude()
-                val longitude = GPSTracker.getLongitude()
+            if (LocationTracker.getLastKnownLocation ()) {
+                val latitude = LocationTracker.getLatitude()
+                val longitude = LocationTracker.getLongitude()
                 mBinding.tvResult.text = "lat :" + latitude.toString() + "long :" + longitude.toString()
                 // \n is for new line
                 Toast.makeText(applicationContext, "Your Location is - \nLat: $latitude\nLong: $longitude", Toast.LENGTH_LONG).show()
             } else {
-                GPSTracker.showSettingsAlert()
+                LocationTracker.showSettingsAlert()
             }
         }
 
         mBinding.btnStop.setOnClickListener {
-            GPSTracker.stopUsingGPS(listener)
+            //            LocationTracker.stopUsingGPS(listener)
+            LocationTracker.removeListener(listener)
             Log.d(TAG, "onCreate: Stop GPS")
         }
+
 
         mBinding.btnLastLocation.setOnClickListener {
             listener = object : CustomLocationListener {
@@ -54,12 +56,16 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "onLocationChage: .............$mLocation")
                 }
             }
-            GPSTracker.startLocationUpdate(listener)
+            LocationTracker.addListener(listener)
         }
         mBinding.btnNext.setOnClickListener {
             val intent = Intent(this@MainActivity, Main2Activity::class.java)
             startActivity(intent)
 
+        }
+        mBinding.btnMap.setOnClickListener {
+            val intent = Intent(this@MainActivity, MapActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -88,7 +94,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         for (i in 0 until permissions.size) {
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                GPSTracker.showSettingsAlert()
+                LocationTracker.showSettingsAlert()
             }
         }
     }

@@ -22,18 +22,18 @@ class Main2Activity : AppCompatActivity() {
         mBinding = DataBindingUtil.setContentView(this@Main2Activity, R.layout.activity_main2)
         mBinding.btn.setOnClickListener {
 
-            if (GPSTracker.canGetLocation()) {
-                val latitude = GPSTracker.getLatitude()
-                val longitude = GPSTracker.getLongitude()
+            if (LocationTracker.getLastKnownLocation()) {
+                val latitude = LocationTracker.getLatitude()
+                val longitude = LocationTracker.getLongitude()
                 // \n is for new line
                 Toast.makeText(applicationContext, "Your Location is - \nLat: $latitude\nLong: $longitude", Toast.LENGTH_LONG).show()
             } else {
-                GPSTracker.showSettingsAlert()
+                LocationTracker.showSettingsAlert()
             }
 
         }
         mBinding.btn2.setOnClickListener {
-            GPSTracker.stopUsingGPS(listener1)
+            LocationTracker.removeListener(listener1)
             Log.d("Stop", "onCreate: STOP1")
 
             Toast.makeText(applicationContext, "Stop", Toast.LENGTH_LONG).show()
@@ -45,29 +45,29 @@ class Main2Activity : AppCompatActivity() {
 
 //                    mBinding.tvResultListener1.text = mLocation.toString()
                     val date = SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS").format(Date(mLocation!!.getTime()));
-                    Log.d("second", "onLocationChage:Part 1" + date + "@@@@@@@@@" + mLocation)
+                    Log.d("second", "onLocationChage:Part 1..:" + date + "@@@@@@@@@" + mLocation)
 
 //                    mBinding.tvResultListener2.text = date
                     Toast.makeText(this@Main2Activity, "Location Listener Working..!!", Toast.LENGTH_SHORT).show()
                 }
             }
-            GPSTracker.startLocationUpdate(listener1)
+            LocationTracker.addListener(listener1)
         }
 
         //Attach multiple listener in single activity
         mBinding.btn4.setOnClickListener {
-            if (GPSTracker.canGetLocation()) {
-                val latitude = GPSTracker.getLatitude()
-                val longitude = GPSTracker.getLongitude()
+            if (LocationTracker.getLastKnownLocation()) {
+                val latitude = LocationTracker.getLatitude()
+                val longitude = LocationTracker.getLongitude()
                 Toast.makeText(applicationContext, "Your Location is -Part 2 \nLat: $latitude\nLong: $longitude", Toast.LENGTH_LONG).show()
             } else {
-                GPSTracker.showSettingsAlert()
+                LocationTracker.showSettingsAlert()
             }
         }
 
 
         mBinding.btn5.setOnClickListener {
-            GPSTracker.stopUsingGPS(listener2)
+            LocationTracker.removeListener(listener2)
             Log.d("stop", "onCreate: STOP2 ")
 
             Toast.makeText(applicationContext, "Part 2 ....Stop2", Toast.LENGTH_LONG).show()
@@ -84,7 +84,12 @@ class Main2Activity : AppCompatActivity() {
                     Toast.makeText(this@Main2Activity, " Part 2 Location Listener Working..!!", Toast.LENGTH_SHORT).show()
                 }
             }
-            GPSTracker.startLocationUpdate(listener2)
+            LocationTracker.addListener(listener2)
+        }
+        mBinding.btn7.setOnClickListener {
+            LocationTracker.removeAllListener()
+            Log.d("Main2Activity", "onCreate: All Listener are successfully removed..!!")
+
         }
     }
 }

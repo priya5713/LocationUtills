@@ -14,12 +14,10 @@ import android.util.Log
 import java.util.ArrayList
 
 class MapActivity : FragmentActivity(), OnMapReadyCallback {
-    override fun onMapReady(p0: GoogleMap?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+
 
     private var mMap: GoogleMap? = null
-    lateinit var gps: GPSTracker
+    lateinit var gps: LocationTracker
     var removeLocations: ArrayList<CustomLocationListener> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,35 +29,35 @@ class MapActivity : FragmentActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
     }
 
-//
-//    @SuppressLint("MissingPermission")
-//    override fun onMapReady(googleMap: GoogleMap) {
-//        mMap = googleMap
-//        mMap?.isMyLocationEnabled = true
-//        gps = GPSTracker
-//        if (gps.canGetLocation()) {
-//
-//            val lat = gps.getLatitude().toString()
-//            val lng = gps.getLongitude().toString()
-//            Log.d(TAG, "onMapReady: Map Lat Long" + lat + "***" + lng)
-//
-//            // Add a marker in Sydney and move the camera
-//            val mLocation = LatLng(lat.toDouble(), lng.toDouble())
-//            mMap!!.addMarker(MarkerOptions().position(mLocation).title("Tutorialspoint.com"))
-//            mMap!!.moveCamera(CameraUpdateFactory.newLatLng(mLocation))
-//        }
-//        gps.startLocationUpdate(object : CustomLocationListener {
-//            override fun onLocationChage(mLocation: Location?) {
-//                mMap?.isMyLocationEnabled = true
-////                mMap?.clear()
-//                mMap?.addMarker(MarkerOptions().position(LatLng(mLocation!!.latitude, mLocation!!.longitude)))
-//                mMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(mLocation!!.latitude, mLocation!!.longitude)))
-//
-//            }
-//        },removeLocations)
-//    }
-//
-//    companion object {
-//        val TAG: String = "Map Activity"
-//    }
+
+    @SuppressLint("MissingPermission")
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        mMap?.isMyLocationEnabled = true
+        gps = LocationTracker
+        if (gps.getLastKnownLocation()) {
+
+            val lat = gps.getLatitude().toString()
+            val lng = gps.getLongitude().toString()
+            Log.d(TAG, "onMapReady: Map Lat Long" + lat + "***" + lng)
+
+            // Add a marker in Sydney and move the camera
+            val mLocation = LatLng(lat.toDouble(), lng.toDouble())
+            mMap!!.addMarker(MarkerOptions().position(mLocation).title("Tutorialspoint.com"))
+            mMap!!.moveCamera(CameraUpdateFactory.newLatLng(mLocation))
+        }
+        gps.addListener(object : CustomLocationListener {
+            override fun onLocationChage(mLocation: Location?) {
+                mMap?.isMyLocationEnabled = true
+//                mMap?.clear()
+                mMap?.addMarker(MarkerOptions().position(LatLng(mLocation!!.latitude, mLocation!!.longitude)))
+                mMap!!.moveCamera(CameraUpdateFactory.newLatLng(LatLng(mLocation!!.latitude, mLocation!!.longitude)))
+
+            }
+        })
+    }
+
+    companion object {
+        val TAG: String = "Map Activity"
+    }
 }
